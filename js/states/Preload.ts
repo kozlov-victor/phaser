@@ -25,6 +25,7 @@ class Preload extends Phaser.State {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
         this.game.physics.arcade.gravity.y = 0;
         this.game.state.start('intro');
+        this.game.scale.startFullScreen(false);
     }
 
 }
