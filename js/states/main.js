@@ -17,6 +17,8 @@ var Boot = (function (_super) {
         this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         this.scale.pageAlignHorizontally = true;
         this.scale.pageAlignVertically = true;
+        this.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
+        this.game.scale.startFullScreen(true); //
         this.game.state.start('preload');
     };
     return Boot;
