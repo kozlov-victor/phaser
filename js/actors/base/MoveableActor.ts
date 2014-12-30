@@ -27,5 +27,5 @@ class MoveableActor extends Actor {
 }
 
 enum Directions {
-    LEFT,RIGHT,DOWN,UP
+    LEFT=1,RIGHT=2,DOWN=3,UP=4
 }

@@ -69,10 +69,10 @@ var Actor = (function () {
         }
     }
     Actor.getGroup = function (groupName) {
-        return Actor.groups[groupName];
+        return Actor.groups[groupName] || [];
     };
     Actor.getGroupRawArr = function (groupName) {
-        return Actor.groupsRawArr[groupName];
+        return Actor.groupsRawArr[groupName] || [];
     };
     Actor.groups = {};
     Actor.groupsRawArr = {};
@@ -100,10 +100,10 @@ var MoveableActor = (function (_super) {
 })(Actor);
 var Directions;
 (function (Directions) {
-    Directions[Directions["LEFT"] = 0] = "LEFT";
-    Directions[Directions["RIGHT"] = 1] = "RIGHT";
-    Directions[Directions["DOWN"] = 2] = "DOWN";
-    Directions[Directions["UP"] = 3] = "UP";
+    Directions[Directions["LEFT"] = 1] = "LEFT";
+    Directions[Directions["RIGHT"] = 2] = "RIGHT";
+    Directions[Directions["DOWN"] = 3] = "DOWN";
+    Directions[Directions["UP"] = 4] = "UP";
 })(Directions || (Directions = {}));
 /// <reference path="../../engine/phaser.d.ts"/>
 /// <reference path="../base/Actor.ts"/>
@@ -125,11 +125,11 @@ var Hero = (function (_super) {
     Hero.prototype.setDirection = function (direction) {
         this.direction = direction;
         this.sprite.animations.play('walk');
-        if (0 /* LEFT */ == direction) {
+        if (1 /* LEFT */ == direction) {
             this.sprite.body.velocity.x = -this.velocity;
             this.sprite.scale.setTo(-1, 1);
         }
-        else if (1 /* RIGHT */ == direction) {
+        else if (2 /* RIGHT */ == direction) {
             this.sprite.body.velocity.x = this.velocity;
             this.sprite.scale.setTo(1, 1);
         }
@@ -143,10 +143,10 @@ var Hero = (function (_super) {
         this.sprite.body.velocity.x = 0;
         //this.sprite.body.velocity.y = 0;
         if (cursor.right.isDown) {
-            this.setDirection(1 /* RIGHT */);
+            this.setDirection(2 /* RIGHT */);
         }
         else if (cursor.left.isDown) {
-            this.setDirection(0 /* LEFT */);
+            this.setDirection(1 /* LEFT */);
         }
         if (!(this.sprite.body.touching.down || this.sprite.body.blocked.down || this.sprite.body.blocked.up)) {
             this.sprite.animations.stop();
@@ -174,63 +174,66 @@ var Platform = (function (_super) {
     __extends(Platform, _super);
     function Platform(posX, posY, spriteName, game, groupName) {
         _super.call(this, posX, posY, spriteName, game, groupName);
-        this.type = 0 /* HORIZONTAL */;
+        this.type = 1 /* HORIZONTAL */;
         this.pointMin = 0;
         this.pointMax = 100;
         this.sprite.frame = 1;
         this.sprite.body.allowGravity = false;
         this.sprite.body.immovable = true;
     }
+    Platform.getTypeFromInt = function (n) {
+        return (+n == 1) ? 1 /* HORIZONTAL */ : 2 /* VERTICAL */;
+    };
     Platform.prototype.init = function (type, deltaPointMin, deltaPointMax, velocity) {
         this.type = type;
-        if (type == 0 /* HORIZONTAL */) {
+        if (type == 1 /* HORIZONTAL */) {
             this.pointMin = this.sprite.position.x - deltaPointMin;
-            this.pointMax = this.sprite.position.x + deltaPointMax;
-            this.setDirection(1 /* RIGHT */);
+            this.pointMax = this.sprite.position.x + (+deltaPointMax);
+            this.setDirection(2 /* RIGHT */);
         }
         else {
             this.pointMin = this.sprite.position.y - deltaPointMin;
-            this.pointMax = this.sprite.position.y + deltaPointMax;
-            this.setDirection(3 /* UP */);
+            this.pointMax = this.sprite.position.y + (+deltaPointMax);
+            this.setDirection(4 /* UP */);
         }
         this.velocity = velocity;
     };
     Platform.prototype.setDirection = function (direction) {
         this.direction = direction;
         switch (direction) {
-            case 1 /* RIGHT */:
+            case 2 /* RIGHT */:
                 this.sprite.body.velocity.x = this.velocity;
                 break;
-            case 0 /* LEFT */:
+            case 1 /* LEFT */:
                 this.sprite.body.velocity.x = -this.velocity;
                 break;
-            case 3 /* UP */:
+            case 4 /* UP */:
                 this.sprite.body.velocity.y = -this.velocity;
                 break;
-            case 2 /* DOWN */:
+            case 3 /* DOWN */:
                 this.sprite.body.velocity.y = this.velocity;
                 break;
         }
     };
     Platform.prototype.update = function () {
-        if (this.type == 1 /* VERTICAL */) {
-            if (this.direction == 3 /* UP */) {
+        if (this.type == 2 /* VERTICAL */) {
+            if (this.direction == 4 /* UP */) {
                 if (this.sprite.position.y < this.pointMin)
-                    this.setDirection(2 /* DOWN */);
+                    this.setDirection(3 /* DOWN */);
             }
             else {
                 if (this.sprite.position.y > this.pointMax)
-                    this.setDirection(3 /* UP */);
+                    this.setDirection(4 /* UP */);
             }
         }
         else {
-            if (this.direction == 0 /* LEFT */) {
+            if (this.direction == 1 /* LEFT */) {
                 if (this.sprite.position.x < this.pointMin)
-                    this.setDirection(1 /* RIGHT */);
+                    this.setDirection(2 /* RIGHT */);
             }
             else {
                 if (this.sprite.position.x > this.pointMax)
-                    this.setDirection(0 /* LEFT */);
+                    this.setDirection(1 /* LEFT */);
             }
         }
     };
@@ -238,8 +241,8 @@ var Platform = (function (_super) {
 })(MoveableActor);
 var PlatformType;
 (function (PlatformType) {
-    PlatformType[PlatformType["HORIZONTAL"] = 0] = "HORIZONTAL";
-    PlatformType[PlatformType["VERTICAL"] = 1] = "VERTICAL";
+    PlatformType[PlatformType["HORIZONTAL"] = 1] = "HORIZONTAL";
+    PlatformType[PlatformType["VERTICAL"] = 2] = "VERTICAL";
 })(PlatformType || (PlatformType = {}));
 /// <reference path="../engine/phaser.d.ts"/>
 var TileMapUtil = (function () {
@@ -283,13 +286,16 @@ var BaseLevel = (function (_super) {
         this.tileMapUtil = new TileMapUtil(this.game);
         this.tileMapUtil.createMap(opts.levelMap, 'mainTileSet', 'imgTiles', 'mainLayer', 'objectLayer', [1, 2, 3]);
         this.tileMapUtil.getMapObjects().forEach(function (el) {
-            if (el.properties.type === 'snowFlake') {
-                new SnowFlake(el.x, el.y - 60, 'sprSnowFlake', _this.game, 'snowFlakes');
+            switch (el.properties.type) {
+                case 'snowFlake':
+                    new SnowFlake(el.x, el.y - 60, 'sprSnowFlake', _this.game, 'snowFlakes');
+                    break;
+                case 'platform':
+                    var platform = new Platform(el.x, el.y - 60, 'sprTiles', _this.game, 'platforms');
+                    platform.init(Platform.getTypeFromInt(el.properties.platformType), el.properties.deltaPointMin, el.properties.deltaPointMax, 100);
+                    break;
             }
         });
-        new SnowFlake(opts.heroPosX + 150, opts.heroPosY, 'sprSnowFlake', this.game, 'snowFlakes');
-        this.platform = new Platform(opts.heroPosX + 150, opts.heroPosY + 18, 'sprTiles', this.game, 'platforms');
-        this.platform.init(1 /* VERTICAL */, 50, 120, 100);
         this.emitter = this.game.add.emitter();
         this.emitter.makeParticles(['imgParticle', 'sprSnowFlake'], [0], 200);
         this.emitter.width = 20;
@@ -322,8 +328,8 @@ var Level1 = (function (_super) {
     }
     Level1.prototype.create = function () {
         this.initLevel({
-            heroPosX: 64,
-            heroPosY: 564,
+            heroPosX: 12,
+            heroPosY: 64,
             levelMap: 'mapLevel1',
             levelBgSound: 'bgSound'
         });

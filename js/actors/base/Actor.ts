@@ -23,11 +23,11 @@ class Actor {
     }
 
     static getGroup(groupName:string):Phaser.Group {
-        return Actor.groups[groupName];
+        return Actor.groups[groupName] || [];
     }
 
     static getGroupRawArr(groupName:string) {
-        return Actor.groupsRawArr[groupName];
+        return Actor.groupsRawArr[groupName] || [];
     }
 
 

@@ -6,6 +6,10 @@ class Platform extends MoveableActor {
     private pointMin:number = 0;
     private pointMax:number = 100;
 
+    static getTypeFromInt(n:any):PlatformType {
+        return (+n==1)?PlatformType.HORIZONTAL:PlatformType.VERTICAL;
+    }
+
     constructor(posX:number,posY:number,spriteName:string,game:Phaser.Game,groupName?:string) {
         super(posX,posY,spriteName,game,groupName);
         this.sprite.frame = 1;
@@ -17,11 +21,11 @@ class Platform extends MoveableActor {
         this.type = type;
         if (type==PlatformType.HORIZONTAL) {
             this.pointMin = this.sprite.position.x-deltaPointMin;
-            this.pointMax = this.sprite.position.x+deltaPointMax;
+            this.pointMax = this.sprite.position.x+(+deltaPointMax);
             this.setDirection(Directions.RIGHT);
         } else {
             this.pointMin = this.sprite.position.y-deltaPointMin;
-            this.pointMax = this.sprite.position.y+deltaPointMax;
+            this.pointMax = this.sprite.position.y+(+deltaPointMax);
             this.setDirection(Directions.UP);
         }
         this.velocity = velocity;
@@ -64,5 +68,5 @@ class Platform extends MoveableActor {
 }
 
 enum PlatformType {
-    HORIZONTAL,VERTICAL
+    HORIZONTAL=1,VERTICAL=2
 }

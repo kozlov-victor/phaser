@@ -11,7 +11,6 @@ class BaseLevel extends Phaser.State {
     cursor:Phaser.CursorKeys;
     tileMapUtil:TileMapUtil;
     emitter:Phaser.Particles.Arcade.Emitter;
-    platform:Platform;
 
     public initLevel(opts:LevelOptions):void {
         this.game.physics.arcade.gravity.y = 200;
@@ -24,13 +23,22 @@ class BaseLevel extends Phaser.State {
             opts.levelMap,'mainTileSet','imgTiles','mainLayer','objectLayer',[1,2,3]
         );
         this.tileMapUtil.getMapObjects().forEach((el)=>{
-            if (el.properties.type==='snowFlake') {
-                new SnowFlake(el.x,el.y-60,'sprSnowFlake',this.game,'snowFlakes');
+            switch (el.properties.type) {
+                case 'snowFlake':
+                    new SnowFlake(el.x,el.y-60,'sprSnowFlake',this.game,'snowFlakes');
+                    break;
+                case 'platform':
+                    var platform = new Platform(el.x,el.y-60,'sprTiles',this.game,'platforms');
+                    platform.init(
+                        Platform.getTypeFromInt(el.properties.platformType),
+                        el.properties.deltaPointMin,
+                        el.properties.deltaPointMax,
+                        100
+                    );
+                    break;
+
             }
         });
-        new SnowFlake(opts.heroPosX+150,opts.heroPosY,'sprSnowFlake',this.game,'snowFlakes');
-        this.platform = new Platform(opts.heroPosX+150,opts.heroPosY+18,'sprTiles',this.game,'platforms');
-        this.platform.init(PlatformType.VERTICAL,50,120,100);
         this.emitter = this.game.add.emitter();
         this.emitter.makeParticles(['imgParticle','sprSnowFlake'],[0],200);
         this.emitter.width = 20;

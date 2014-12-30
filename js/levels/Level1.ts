@@ -5,8 +5,8 @@ class Level1 extends BaseLevel {
 
     create():void {
         this.initLevel({
-            heroPosX:64,
-            heroPosY:564,
+            heroPosX:12,
+            heroPosY:64,
             levelMap:'mapLevel1',
             levelBgSound:'bgSound'
         });
