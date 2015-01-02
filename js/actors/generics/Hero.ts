@@ -15,7 +15,7 @@ class Hero extends MoveableActor {
         this.sprite.animations.add('walk',[0,1],12,true);
         this.sprite.frame = this.initialFrame;
         this.sprite.anchor.setTo(0.5,1);
-        game.input.keyboard.onUpCallback = ()=>this.stop();
+        //game.input.keyboard.onUpCallback = ()=>this.stop();
     }
 
     setDirection(direction:Directions):void {
@@ -39,7 +39,6 @@ class Hero extends MoveableActor {
     }
 
     updateCursor(cursor:Phaser.CursorKeys):void {
-
         this.sprite.body.velocity.x = 0;
         //this.sprite.body.velocity.y = 0;
         if (cursor.right.isDown) {
@@ -56,6 +55,9 @@ class Hero extends MoveableActor {
         if (cursor.up.isDown && (this.sprite.body.blocked.down || this.sprite.body.touching.down)) {
             this.sprite.body.velocity.y = -170;
         }
+
+        if (cursor.left.justUp || cursor.right.justUp) this.stop();
+
     }
 
 }

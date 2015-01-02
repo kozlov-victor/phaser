@@ -26,7 +26,7 @@ class Actor {
         return Actor.groups[groupName] || [];
     }
 
-    static getGroupRawArr(groupName:string) {
+    static getGroupRawArr(groupName:string):Actor[] {
         return Actor.groupsRawArr[groupName] || [];
     }
 

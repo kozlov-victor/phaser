@@ -12,6 +12,8 @@ class BaseLevel extends Phaser.State {
     tileMapUtil:TileMapUtil;
     emitter:Phaser.Particles.Arcade.Emitter;
 
+    collected:number = 0;
+
     public initLevel(opts:LevelOptions):void {
         this.game.physics.arcade.gravity.y = 200;
         this.game.canvas.onclick = null;
@@ -44,7 +46,6 @@ class BaseLevel extends Phaser.State {
         this.emitter.width = 20;
         this.emitter.height = 20;
         this.emitter.setAlpha(0.1,1.0);
-
     }
 
     public update():void {
@@ -59,6 +60,11 @@ class BaseLevel extends Phaser.State {
                 this.emitter.emitX = showFlake.position.x;
                 this.emitter.emitY = showFlake.position.y;
                 this.emitter.explode(3000,20);
+                if (++this.collected==SnowFlake.getGroupRawArr('snowFlakes').length) {
+                    this.game.time.events.add(1000,()=>{
+                        this.game.state.start('levelPassed');
+                    },this);
+                }
             }
         );
         this.hero.updateCursor(this.cursor);

@@ -112,7 +112,6 @@ var Directions;
 var Hero = (function (_super) {
     __extends(Hero, _super);
     function Hero(posX, posY, spriteName, game) {
-        var _this = this;
         _super.call(this, posX, posY, spriteName, game);
         this.initialFrame = 2;
         this.sprite.body.setSize(24, 32, 0, 0);
@@ -120,7 +119,7 @@ var Hero = (function (_super) {
         this.sprite.animations.add('walk', [0, 1], 12, true);
         this.sprite.frame = this.initialFrame;
         this.sprite.anchor.setTo(0.5, 1);
-        game.input.keyboard.onUpCallback = function () { return _this.stop(); };
+        //game.input.keyboard.onUpCallback = ()=>this.stop();
     }
     Hero.prototype.setDirection = function (direction) {
         this.direction = direction;
@@ -155,6 +154,8 @@ var Hero = (function (_super) {
         if (cursor.up.isDown && (this.sprite.body.blocked.down || this.sprite.body.touching.down)) {
             this.sprite.body.velocity.y = -170;
         }
+        if (cursor.left.justUp || cursor.right.justUp)
+            this.stop();
     };
     return Hero;
 })(MoveableActor);
@@ -276,6 +277,7 @@ var BaseLevel = (function (_super) {
     __extends(BaseLevel, _super);
     function BaseLevel() {
         _super.apply(this, arguments);
+        this.collected = 0;
     }
     BaseLevel.prototype.initLevel = function (opts) {
         var _this = this;
@@ -314,13 +316,18 @@ var BaseLevel = (function (_super) {
             _this.emitter.emitX = showFlake.position.x;
             _this.emitter.emitY = showFlake.position.y;
             _this.emitter.explode(3000, 20);
+            if (++_this.collected == SnowFlake.getGroupRawArr('snowFlakes').length) {
+                _this.game.time.events.add(1000, function () {
+                    _this.game.state.start('levelPassed');
+                }, _this);
+            }
         });
         this.hero.updateCursor(this.cursor);
     };
     return BaseLevel;
 })(Phaser.State);
-/// <reference path="../engine/phaser.d.ts"/>
-/// <reference path="../levels/BaseLevel.ts"/>
+/// <reference path="../../engine/phaser.d.ts"/>
+/// <reference path="../BaseLevel.ts"/>
 var Level1 = (function (_super) {
     __extends(Level1, _super);
     function Level1() {
@@ -339,6 +346,25 @@ var Level1 = (function (_super) {
         _super.prototype.update.call(this);
     };
     return Level1;
+})(BaseLevel);
+var Level2 = (function (_super) {
+    __extends(Level2, _super);
+    function Level2() {
+        _super.apply(this, arguments);
+    }
+    Level2.prototype.create = function () {
+        this.initLevel({
+            heroPosX: 12,
+            heroPosY: 64,
+            levelMap: 'mapLevel2',
+            levelBgSound: 'bgSound'
+        });
+        console.log('%c level2 ok', 'color: green;font-weight:bolder;font-size:24px;');
+    };
+    Level2.prototype.update = function () {
+        _super.prototype.update.call(this);
+    };
+    return Level2;
 })(BaseLevel);
 /// <reference path="../engine/phaser.d.ts"/>
 var MainIntro = (function (_super) {
@@ -363,19 +389,48 @@ var MainIntro = (function (_super) {
         };
         var copy = this.game.add.bitmapText(-100, 220, 'font', '(c)kozlov-victor', 12);
         this.game.add.tween(copy).to({ x: 22 }, 3000, Phaser.Easing.Elastic.Out).start();
-        //this.game.time.events.add(5000,()=>{
-        //    this.game.state.start('game');
-        //},null);
     };
     MainIntro.prototype.update = function () {
     };
     return MainIntro;
 })(Phaser.State);
 /// <reference path="../engine/phaser.d.ts"/>
+var LevelPassed = (function (_super) {
+    __extends(LevelPassed, _super);
+    function LevelPassed() {
+        _super.apply(this, arguments);
+    }
+    LevelPassed.prototype.create = function () {
+        var _this = this;
+        this.emitter = this.game.add.emitter();
+        this.emitter.makeParticles(['imgParticle', 'sprSnowFlake'], [0], 200);
+        this.emitter.width = 100;
+        this.emitter.height = 100;
+        this.emitter.setAlpha(0.1, 1.0);
+        this.emit(100, 100);
+        for (var i = 0; i < 10; i++) {
+            this.game.time.events.add(this.game.rnd.integerInRange(1000, 5000), function () {
+                _this.emit(_this.game.rnd.integerInRange(200, _this.game.camera.width - 200), _this.game.rnd.integerInRange(200, _this.game.camera.height - 200));
+            }, this);
+        }
+        var text = this.game.add.bitmapText(-100, 12, 'font', 'Уровень пройден!!!!!', 20);
+        this.game.add.tween(text.position).to({ x: 22 }, 1000, Phaser.Easing.Bounce.Out).start();
+    };
+    LevelPassed.prototype.emit = function (x, y) {
+        this.emitter.emitX = x;
+        this.emitter.emitY = y;
+        this.emitter.explode(3000, 50);
+    };
+    LevelPassed.prototype.update = function () {
+    };
+    return LevelPassed;
+})(Phaser.State);
+/// <reference path="../engine/phaser.d.ts"/>
 /// <reference path="../states/Boot.ts"/>
 /// <reference path="../states/Preload.ts"/>
-/// <reference path="../levels/Level1.ts"/>
+/// <reference path="../levels/generic/Levels.ts"/>
 /// <reference path="../introes/MainIntro.ts"/>
+/// <reference path="../introes/LevelPassed.ts"/>
 var GameLauncher = (function () {
     function GameLauncher() {
         this.game = new Phaser.Game(320, 240, Phaser.AUTO, '');
@@ -383,6 +438,7 @@ var GameLauncher = (function () {
         this.game.state.add('preload', new Preload());
         this.game.state.add('game', new Level1());
         this.game.state.add('intro', new MainIntro());
+        this.game.state.add('levelPassed', new LevelPassed());
         this.game.state.start('boot');
     }
     return GameLauncher;

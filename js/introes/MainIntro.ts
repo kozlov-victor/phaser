@@ -43,9 +43,6 @@ class MainIntro extends Phaser.State {
         this.game.add.tween(copy).
             to({x:22},3000,Phaser.Easing.Elastic.Out).
             start();
-        //this.game.time.events.add(5000,()=>{
-        //    this.game.state.start('game');
-        //},null);
 
 
     }
