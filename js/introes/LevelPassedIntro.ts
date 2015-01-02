@@ -6,6 +6,7 @@ class LevelPassedIntro extends Phaser.State {
 
     emitter:Phaser.Particles.Arcade.Emitter;
     textWin:Phaser.BitmapText;
+    textTitles:Phaser.BitmapText;
     nextLevelManager:NextLevelManager = NextLevelManager.getInstance();
 
     public create():void {
@@ -24,7 +25,40 @@ class LevelPassedIntro extends Phaser.State {
                 'Игра пройдена!!!',
                 30
             );
+            this.textTitles = this.game.add.bitmapText(
+                10,
+                500,
+                'font',
+                'Программирование: victor-kozlov\n'+
+                'Основна идея\n'+
+                'и  прочие дела\n'+
+                'так же\n'+
+                'victor-kozlov\n'+
+                '"Сдесь может быть ваша реклама"\n'+
+                'Всем привет)))))!\n',
+                15
+            );
+            this.game.add.tween(this.textTitles.position)
+                .to({y:-200},20000,Phaser.Easing.Linear.None)
+            .start();
+            this.game.time.events.add(3000,()=>{
+                this.textWin.alpha = 0;
+            },this);
+        } else {
+            var text:Phaser.BitmapText=this.game.add.bitmapText(-100,12,'font','Уровень пройден!!!!!',20);
+            this.game.add.tween(text.position).
+                to({x:22},1000,Phaser.Easing.Bounce.Out).
+                start();
         }
+
+        this.game.time.events.add(5000,()=>{
+            if (this.nextLevelManager.isLast()) {
+                console.log('game passed');
+            } else {
+                this.game.state.add('nextLevel',this.nextLevelManager.getNext());
+                this.game.state.start('nextLevel');
+            }
+        },this);
 
         this.emit(100,100);
         for (var i=0;i<10;i++) {
@@ -35,19 +69,6 @@ class LevelPassedIntro extends Phaser.State {
                 );
             },this);
         }
-
-        var text:Phaser.BitmapText=this.game.add.bitmapText(-100,12,'font','Уровень пройден!!!!!',20);
-        this.game.time.events.add(5000,()=>{
-            if (this.nextLevelManager.isLast()) {
-                console.log('game passed');
-            } else {
-                this.game.state.add('nextLevel',this.nextLevelManager.getNext());
-                this.game.state.start('nextLevel');
-            }
-        },this);
-        this.game.add.tween(text.position).
-            to({x:22},1000,Phaser.Easing.Bounce.Out).
-            start();
     }
 
     private emit(x:number,y:number) {

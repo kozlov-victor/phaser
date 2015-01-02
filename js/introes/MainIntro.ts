@@ -34,7 +34,7 @@ class MainIntro extends Phaser.State {
         var hero:Hero = new Hero(22,152,'sprHero',this.game);
         hero.sprite.animations.play('walk');
         this.game.canvas.onclick = ()=> {
-            this.game.state.start('nextLevel');
+            this.game.state.start('nextLevel');// levelPassedIntro
         };
         var copy:Phaser.BitmapText = this.game.add.bitmapText(-100,220,'font',
             '(c)kozlov-victor',
