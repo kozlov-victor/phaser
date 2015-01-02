@@ -36,3 +36,23 @@ class Level2 extends BaseLevel {
     }
 
 }
+
+
+class Level3 extends BaseLevel {
+
+    create():void {
+        this.initLevel({
+            heroPosX:12,
+            heroPosY:64,
+            levelMap:'mapLevel3',
+            levelBgSound:'bgSound'
+        });
+        console.log('%c level3 ok','color: green;font-weight:bolder;font-size:24px;');
+    }
+
+    update():void {
+        super.update();
+    }
+
+}
+

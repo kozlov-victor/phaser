@@ -1,9 +1,12 @@
 /// <reference path="../engine/phaser.d.ts"/>
+/// <reference path="../levels/NextLevelManager.ts"/>
 
 
-class LevelPassed extends Phaser.State {
+class LevelPassedIntro extends Phaser.State {
 
     emitter:Phaser.Particles.Arcade.Emitter;
+    textWin:Phaser.BitmapText;
+    nextLevelManager:NextLevelManager = NextLevelManager.getInstance();
 
     public create():void {
         this.emitter = this.game.add.emitter();
@@ -11,6 +14,17 @@ class LevelPassed extends Phaser.State {
         this.emitter.width = 100;
         this.emitter.height = 100;
         this.emitter.setAlpha(0.1,1.0);
+
+
+        if (this.nextLevelManager.isLast()) {
+            this.textWin = this.game.add.bitmapText(
+                20,
+                80,
+                'font',
+                'Игра пройдена!!!',
+                30
+            );
+        }
 
         this.emit(100,100);
         for (var i=0;i<10;i++) {
@@ -23,6 +37,14 @@ class LevelPassed extends Phaser.State {
         }
 
         var text:Phaser.BitmapText=this.game.add.bitmapText(-100,12,'font','Уровень пройден!!!!!',20);
+        this.game.time.events.add(5000,()=>{
+            if (this.nextLevelManager.isLast()) {
+                console.log('game passed');
+            } else {
+                this.game.state.add('nextLevel',this.nextLevelManager.getNext());
+                this.game.state.start('nextLevel');
+            }
+        },this);
         this.game.add.tween(text.position).
             to({x:22},1000,Phaser.Easing.Bounce.Out).
             start();

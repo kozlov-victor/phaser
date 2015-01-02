@@ -17,7 +17,9 @@ class Preload extends Phaser.State {
 
         this.game.load.bitmapFont('font','assets/data/font.png','assets/data/font.fnt');
 
-        this.game.load.tilemap('mapLevel1','assets/data/mapLevel1.json',null,Phaser.Tilemap.TILED_JSON)
+        this.game.load.tilemap('mapLevel1','assets/data/mapLevel1.json',null,Phaser.Tilemap.TILED_JSON);
+        this.game.load.tilemap('mapLevel2','assets/data/mapLevel2.json',null,Phaser.Tilemap.TILED_JSON);
+        this.game.load.tilemap('mapLevel3','assets/data/mapLevel3.json',null,Phaser.Tilemap.TILED_JSON);
 
     }
 

@@ -4,7 +4,7 @@
 class Actor {
     sprite:Phaser.Sprite;
     private static groups={};
-    private static groupsRawArr = {};
+    private static groupsRawArr={};
     game:Phaser.Game;
 
     constructor(posX:number,posY:number,spriteName:string,game:Phaser.Game,groupName?:string) {
@@ -30,6 +30,10 @@ class Actor {
         return Actor.groupsRawArr[groupName] || [];
     }
 
+    static clear():void {
+        Actor.groups = {};
+        Actor.groupsRawArr = {};
+    }
 
 
 }

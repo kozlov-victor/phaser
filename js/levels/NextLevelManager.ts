@@ -4,20 +4,21 @@ class NextLevelManager {
     private levels:BaseLevel[] = [];
     private currentLevelNumber = 0;
     private instanceCrested:boolean = false;
-    private instance:NextLevelManager = null;
+    private static instance:NextLevelManager = null;
 
     constructor() {
         if (this.instanceCrested) throw new Error('use getInstance instead of constructor');
         this.instanceCrested = true;
     }
 
-    public getInstance():NextLevelManager {
-        if (!this.instance) this.instance = new NextLevelManager();
-        return this.instance;
+    public static getInstance():NextLevelManager {
+        if (!NextLevelManager.instance) NextLevelManager.instance = new NextLevelManager();
+        return NextLevelManager.instance;
     }
 
-    public addLevel(level:BaseLevel):void {
+    public addLevel(level:BaseLevel):NextLevelManager {
         this.levels.push(level);
+        return NextLevelManager.instance;
     }
 
     public getFirst():BaseLevel {

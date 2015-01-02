@@ -42,6 +42,8 @@ var Preload = (function (_super) {
         this.game.load.image('imgParticle', 'assets/images/imgParticle.png');
         this.game.load.bitmapFont('font', 'assets/data/font.png', 'assets/data/font.fnt');
         this.game.load.tilemap('mapLevel1', 'assets/data/mapLevel1.json', null, Phaser.Tilemap.TILED_JSON);
+        this.game.load.tilemap('mapLevel2', 'assets/data/mapLevel2.json', null, Phaser.Tilemap.TILED_JSON);
+        this.game.load.tilemap('mapLevel3', 'assets/data/mapLevel3.json', null, Phaser.Tilemap.TILED_JSON);
     };
     Preload.prototype.create = function () {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -73,6 +75,10 @@ var Actor = (function () {
     };
     Actor.getGroupRawArr = function (groupName) {
         return Actor.groupsRawArr[groupName] || [];
+    };
+    Actor.clear = function () {
+        Actor.groups = {};
+        Actor.groupsRawArr = {};
     };
     Actor.groups = {};
     Actor.groupsRawArr = {};
@@ -283,6 +289,7 @@ var BaseLevel = (function (_super) {
         var _this = this;
         this.game.physics.arcade.gravity.y = 200;
         this.game.canvas.onclick = null;
+        Actor.clear();
         this.cursor = this.game.input.keyboard.createCursorKeys();
         this.hero = new Hero(opts.heroPosX, opts.heroPosY, 'sprHero', this.game);
         this.tileMapUtil = new TileMapUtil(this.game);
@@ -318,7 +325,7 @@ var BaseLevel = (function (_super) {
             _this.emitter.explode(3000, 20);
             if (++_this.collected == SnowFlake.getGroupRawArr('snowFlakes').length) {
                 _this.game.time.events.add(1000, function () {
-                    _this.game.state.start('levelPassed');
+                    _this.game.state.start('levelPassedIntro');
                 }, _this);
             }
         });
@@ -366,6 +373,57 @@ var Level2 = (function (_super) {
     };
     return Level2;
 })(BaseLevel);
+var Level3 = (function (_super) {
+    __extends(Level3, _super);
+    function Level3() {
+        _super.apply(this, arguments);
+    }
+    Level3.prototype.create = function () {
+        this.initLevel({
+            heroPosX: 12,
+            heroPosY: 64,
+            levelMap: 'mapLevel3',
+            levelBgSound: 'bgSound'
+        });
+        console.log('%c level3 ok', 'color: green;font-weight:bolder;font-size:24px;');
+    };
+    Level3.prototype.update = function () {
+        _super.prototype.update.call(this);
+    };
+    return Level3;
+})(BaseLevel);
+///<reference path="BaseLevel.ts"/>
+var NextLevelManager = (function () {
+    function NextLevelManager() {
+        this.levels = [];
+        this.currentLevelNumber = 0;
+        this.instanceCrested = false;
+        if (this.instanceCrested)
+            throw new Error('use getInstance instead of constructor');
+        this.instanceCrested = true;
+    }
+    NextLevelManager.getInstance = function () {
+        if (!NextLevelManager.instance)
+            NextLevelManager.instance = new NextLevelManager();
+        return NextLevelManager.instance;
+    };
+    NextLevelManager.prototype.addLevel = function (level) {
+        this.levels.push(level);
+        return NextLevelManager.instance;
+    };
+    NextLevelManager.prototype.getFirst = function () {
+        return this.levels[0];
+    };
+    NextLevelManager.prototype.getNext = function () {
+        this.currentLevelNumber++;
+        return this.levels[this.currentLevelNumber];
+    };
+    NextLevelManager.prototype.isLast = function () {
+        return this.levels.length - 1 == this.currentLevelNumber;
+    };
+    NextLevelManager.instance = null;
+    return NextLevelManager;
+})();
 /// <reference path="../engine/phaser.d.ts"/>
 var MainIntro = (function (_super) {
     __extends(MainIntro, _super);
@@ -385,7 +443,7 @@ var MainIntro = (function (_super) {
         var hero = new Hero(22, 152, 'sprHero', this.game);
         hero.sprite.animations.play('walk');
         this.game.canvas.onclick = function () {
-            _this.game.state.start('game');
+            _this.game.state.start('nextLevel');
         };
         var copy = this.game.add.bitmapText(-100, 220, 'font', '(c)kozlov-victor', 12);
         this.game.add.tween(copy).to({ x: 22 }, 3000, Phaser.Easing.Elastic.Out).start();
@@ -395,18 +453,23 @@ var MainIntro = (function (_super) {
     return MainIntro;
 })(Phaser.State);
 /// <reference path="../engine/phaser.d.ts"/>
-var LevelPassed = (function (_super) {
-    __extends(LevelPassed, _super);
-    function LevelPassed() {
+/// <reference path="../levels/NextLevelManager.ts"/>
+var LevelPassedIntro = (function (_super) {
+    __extends(LevelPassedIntro, _super);
+    function LevelPassedIntro() {
         _super.apply(this, arguments);
+        this.nextLevelManager = NextLevelManager.getInstance();
     }
-    LevelPassed.prototype.create = function () {
+    LevelPassedIntro.prototype.create = function () {
         var _this = this;
         this.emitter = this.game.add.emitter();
         this.emitter.makeParticles(['imgParticle', 'sprSnowFlake'], [0], 200);
         this.emitter.width = 100;
         this.emitter.height = 100;
         this.emitter.setAlpha(0.1, 1.0);
+        if (this.nextLevelManager.isLast()) {
+            this.textWin = this.game.add.bitmapText(20, 80, 'font', 'Игра пройдена!!!', 30);
+        }
         this.emit(100, 100);
         for (var i = 0; i < 10; i++) {
             this.game.time.events.add(this.game.rnd.integerInRange(1000, 5000), function () {
@@ -414,31 +477,42 @@ var LevelPassed = (function (_super) {
             }, this);
         }
         var text = this.game.add.bitmapText(-100, 12, 'font', 'Уровень пройден!!!!!', 20);
+        this.game.time.events.add(5000, function () {
+            if (_this.nextLevelManager.isLast()) {
+                console.log('game passed');
+            }
+            else {
+                _this.game.state.add('nextLevel', _this.nextLevelManager.getNext());
+                _this.game.state.start('nextLevel');
+            }
+        }, this);
         this.game.add.tween(text.position).to({ x: 22 }, 1000, Phaser.Easing.Bounce.Out).start();
     };
-    LevelPassed.prototype.emit = function (x, y) {
+    LevelPassedIntro.prototype.emit = function (x, y) {
         this.emitter.emitX = x;
         this.emitter.emitY = y;
         this.emitter.explode(3000, 50);
     };
-    LevelPassed.prototype.update = function () {
+    LevelPassedIntro.prototype.update = function () {
     };
-    return LevelPassed;
+    return LevelPassedIntro;
 })(Phaser.State);
 /// <reference path="../engine/phaser.d.ts"/>
 /// <reference path="../states/Boot.ts"/>
 /// <reference path="../states/Preload.ts"/>
 /// <reference path="../levels/generic/Levels.ts"/>
+/// <reference path="../levels/NextLevelManager.ts"/>
 /// <reference path="../introes/MainIntro.ts"/>
-/// <reference path="../introes/LevelPassed.ts"/>
+/// <reference path="../introes/LevelPassedIntro.ts"/>
 var GameLauncher = (function () {
     function GameLauncher() {
+        NextLevelManager.getInstance().addLevel(new Level1()).addLevel(new Level2()).addLevel(new Level3());
         this.game = new Phaser.Game(320, 240, Phaser.AUTO, '');
         this.game.state.add('boot', new Boot());
         this.game.state.add('preload', new Preload());
-        this.game.state.add('game', new Level1());
+        this.game.state.add('nextLevel', NextLevelManager.getInstance().getFirst());
         this.game.state.add('intro', new MainIntro());
-        this.game.state.add('levelPassed', new LevelPassed());
+        this.game.state.add('levelPassedIntro', new LevelPassedIntro());
         this.game.state.start('boot');
     }
     return GameLauncher;

@@ -17,6 +17,7 @@ class BaseLevel extends Phaser.State {
     public initLevel(opts:LevelOptions):void {
         this.game.physics.arcade.gravity.y = 200;
         this.game.canvas.onclick = null;
+        Actor.clear();
         this.cursor = this.game.input.keyboard.createCursorKeys();
         this.hero = new Hero(opts.heroPosX,opts.heroPosY,'sprHero',this.game);
 
@@ -62,7 +63,7 @@ class BaseLevel extends Phaser.State {
                 this.emitter.explode(3000,20);
                 if (++this.collected==SnowFlake.getGroupRawArr('snowFlakes').length) {
                     this.game.time.events.add(1000,()=>{
-                        this.game.state.start('levelPassed');
+                        this.game.state.start('levelPassedIntro');
                     },this);
                 }
             }
