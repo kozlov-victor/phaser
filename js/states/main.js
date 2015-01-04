@@ -111,21 +111,49 @@ var Directions;
     Directions[Directions["DOWN"] = 3] = "DOWN";
     Directions[Directions["UP"] = 4] = "UP";
 })(Directions || (Directions = {}));
+///<reference path="../engine/phaser.d.ts"/>
+var FireBehaviour = (function () {
+    function FireBehaviour(game, particleresource, timeToFire) {
+        this.lastFiredTime = 0;
+        this.timeToFire = 500;
+        this.game = game;
+        this.bulletGroup = this.game.add.group();
+        this.bulletGroup.enableBody = true;
+        this.bulletGroup.physicsBodyType = Phaser.Physics.ARCADE;
+        this.bulletGroup.createMultiple(100, particleresource);
+        this.bulletGroup.setAll('outOfBoundsKill', true);
+        this.bulletGroup.setAll('checkWorldBounds', true);
+        this.timeToFire = timeToFire;
+    }
+    FireBehaviour.prototype.fire = function () {
+        var now = this.game.time.now;
+        if (now - this.lastFiredTime > this.timeToFire) {
+            this.lastFiredTime = now;
+            return this.bulletGroup.getFirstExists(false);
+        }
+        return null;
+    };
+    FireBehaviour.prototype.getBullets = function () {
+        return this.bulletGroup;
+    };
+    return FireBehaviour;
+})();
 /// <reference path="../../engine/phaser.d.ts"/>
 /// <reference path="../base/Actor.ts"/>
 /// <reference path="../base/MoveableActor.ts"/>
+/// <reference path="../../behaviour/FireBehaviour.ts"/>
 // http://www.rpgmakervxace.net/user/3173-redxwhirlwind/?tab=reputation&app_tab=forums&type=given
 var Hero = (function (_super) {
     __extends(Hero, _super);
     function Hero(posX, posY, spriteName, game) {
         _super.call(this, posX, posY, spriteName, game);
+        this.fireBehaviour = new FireBehaviour(this.game, 'imgParticle', 500);
         this.initialFrame = 2;
         this.sprite.body.setSize(24, 32, 0, 0);
         game.camera.follow(this.sprite);
         this.sprite.animations.add('walk', [0, 1], 12, true);
         this.sprite.frame = this.initialFrame;
         this.sprite.anchor.setTo(0.5, 1);
-        //game.input.keyboard.onUpCallback = ()=>this.stop();
     }
     Hero.prototype.setDirection = function (direction) {
         this.direction = direction;
@@ -143,6 +171,23 @@ var Hero = (function (_super) {
         this.sprite.animations.stop();
         this.sprite.body.velocity.x = 0;
         this.sprite.frame = this.initialFrame;
+    };
+    Hero.prototype.getBullets = function () {
+        return this.fireBehaviour.getBullets();
+    };
+    Hero.prototype.fire = function () {
+        var bullet = this.fireBehaviour.fire();
+        if (bullet) {
+            if (this.direction == 1 /* LEFT */) {
+                bullet.reset(this.sprite.position.x - 20, this.sprite.position.y - 32);
+                bullet.body.velocity.x = -500;
+            }
+            else {
+                bullet.reset(this.sprite.position.x, this.sprite.position.y - 32);
+                bullet.body.velocity.x = 500;
+            }
+            bullet.scale.set(0.1, 0.1);
+        }
     };
     Hero.prototype.updateCursor = function (cursor) {
         this.sprite.body.velocity.x = 0;
@@ -162,6 +207,9 @@ var Hero = (function (_super) {
         }
         if (cursor.left.justUp || cursor.right.justUp)
             this.stop();
+        if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
+            this.fire();
+        }
     };
     return Hero;
 })(MoveableActor);
@@ -318,6 +366,9 @@ var BaseLevel = (function (_super) {
         });
         this.game.physics.arcade.collide(this.hero.sprite, Platform.getGroup('platforms'));
         this.game.physics.arcade.collide(this.hero.sprite, this.tileMapUtil.getMainLayer());
+        this.game.physics.arcade.collide(this.hero.getBullets(), this.tileMapUtil.getMainLayer(), function (bullet) {
+            bullet.kill();
+        });
         this.game.physics.arcade.collide(this.hero.sprite, SnowFlake.getGroup('snowFlakes'), function (hero, showFlake) {
             showFlake.kill();
             _this.emitter.emitX = showFlake.position.x;
@@ -443,7 +494,7 @@ var MainIntro = (function (_super) {
         var hero = new Hero(22, 152, 'sprHero', this.game);
         hero.sprite.animations.play('walk');
         this.game.canvas.onclick = function () {
-            _this.game.state.start('nextLevel'); // levelPassedIntro
+            _this.game.state.start('nextLevel'); // levelPassedIntro  //nextLevel
         };
         var copy = this.game.add.bitmapText(-100, 220, 'font', '(c)kozlov-victor', 12);
         this.game.add.tween(copy).to({ x: 22 }, 3000, Phaser.Easing.Elastic.Out).start();
@@ -459,6 +510,7 @@ var LevelPassedIntro = (function (_super) {
     function LevelPassedIntro() {
         _super.apply(this, arguments);
         this.nextLevelManager = NextLevelManager.getInstance();
+        this.debug = false;
     }
     LevelPassedIntro.prototype.create = function () {
         var _this = this;
@@ -467,7 +519,11 @@ var LevelPassedIntro = (function (_super) {
         this.emitter.width = 100;
         this.emitter.height = 100;
         this.emitter.setAlpha(0.1, 1.0);
-        if (this.nextLevelManager.isLast()) {
+        if (this.nextLevelManager.isLast() || this.debug) {
+            var sprIntro = this.game.add.sprite(this.game.camera.width / 2, this.game.camera.height / 2, 'imgIntro');
+            sprIntro.anchor.setTo(0.5, 0.5);
+            sprIntro.alpha = 0;
+            this.game.add.tween(sprIntro).to({ alpha: 1 }, 10000, Phaser.Easing.Linear.None).delay(15000).start();
             this.textWin = this.game.add.bitmapText(20, 80, 'font', 'Игра пройдена!!!', 30);
             this.textTitles = this.game.add.bitmapText(10, 500, 'font', 'Программирование: victor-kozlov\n' + 'Основна идея\n' + 'и  прочие дела\n' + 'так же\n' + 'victor-kozlov\n' + '"Сдесь может быть ваша реклама"\n' + 'Всем привет)))))!\n', 15);
             this.game.add.tween(this.textTitles.position).to({ y: -200 }, 20000, Phaser.Easing.Linear.None).start();
@@ -480,7 +536,7 @@ var LevelPassedIntro = (function (_super) {
             this.game.add.tween(text.position).to({ x: 22 }, 1000, Phaser.Easing.Bounce.Out).start();
         }
         this.game.time.events.add(5000, function () {
-            if (_this.nextLevelManager.isLast()) {
+            if (_this.nextLevelManager.isLast() || _this.debug) {
                 console.log('game passed');
             }
             else {
