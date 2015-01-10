@@ -1,5 +1,6 @@
 /// <reference path="../engine/phaser.d.ts"/>
 /// <reference path="../actors/generics/Hero.ts"/>
+/// <reference path="../actors/generics/Enemy.ts"/>
 /// <reference path="LevelOptions.ts"/>
 /// <reference path="../actors/generics/SnowFlake.ts"/>
 /// <reference path="../actors/generics/Platform.ts"/>
@@ -42,6 +43,7 @@ class BaseLevel extends Phaser.State {
 
             }
         });
+        new Enemy(122,122,'sprEnemy',this.game,'enemies');
         this.emitter = this.game.add.emitter();
         this.emitter.makeParticles(['imgParticle','sprSnowFlake'],[0],200);
         this.emitter.width = 20;
@@ -53,8 +55,14 @@ class BaseLevel extends Phaser.State {
         Platform.getGroupRawArr('platforms').forEach(function(pl:Platform){
             pl.update();
         });
+        this.game.physics.arcade.collide(this.tileMapUtil.getMainLayer(),Hero.getGroup('enemies'));
         this.game.physics.arcade.collide(this.hero.sprite,Platform.getGroup('platforms'));
         this.game.physics.arcade.collide(this.hero.sprite,this.tileMapUtil.getMainLayer());
+        this.game.physics.arcade.collide(this.hero.getBullets(),this.tileMapUtil.getMainLayer(),
+            (bullet:Phaser.Sprite)=>{
+                bullet.kill();
+            }
+        );
         this.game.physics.arcade.collide(this.hero.sprite,SnowFlake.getGroup('snowFlakes'),
             (hero:Phaser.Sprite,showFlake:Phaser.Sprite)=>{
                 showFlake.kill();
