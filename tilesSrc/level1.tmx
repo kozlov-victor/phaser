@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="16" height="11" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="mainTileSet" tilewidth="32" tileheight="32">
+  <image source="../assets/images/imgTiles.png" width="96" height="32"/>
+ </tileset>
+ <tileset firstgid="4" name="sprSnowFlake" tilewidth="60" tileheight="60">
+  <image source="../assets/images/sprSnowFlake.png" width="480" height="60"/>
+  <tile id="0">
+   <properties>
+    <property name="type" value="snowFlake"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="mainLayer" width="16" height="11">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,
+0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,
+0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,2,
+0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,
+0,0,0,0,0,0,0,2,2,0,0,0,2,2,2,2,
+2,2,2,2,2,0,0,2,2,0,0,0,2,2,2,2,
+2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+</data>
+ </layer>
+ <objectgroup name="objectLayer">
+  <object gid="4" x="58" y="286">
+   <properties>
+    <property name="type" value="snowFlake"/>
+   </properties>
+  </object>
+  <object gid="4" x="318" y="332">
+   <properties>
+    <property name="type" value="snowFlake"/>
+   </properties>
+  </object>
+  <object gid="4" x="454" y="64">
+   <properties>
+    <property name="type" value="snowFlake"/>
+   </properties>
+  </object>
+  <object gid="4" x="260" y="163">
+   <properties>
+    <property name="type" value="snowFlake"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

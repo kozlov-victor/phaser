@@ -34,11 +34,6 @@ class Hero extends MoveableActor {
     }
 
 
-    stop():void {
-        this.sprite.animations.stop();
-        this.sprite.body.velocity.x = 0;
-        this.sprite.frame = this.initialFrame;
-    }
 
     getBullets():Phaser.Group {
         return this.fireBehaviour.getBullets();

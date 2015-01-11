@@ -10,6 +10,7 @@ class Preload extends Phaser.State {
 
         this.game.load.spritesheet('sprHero','assets/images/sprSanta.png',32,32);
         this.game.load.spritesheet('sprSnowFlake','assets/images/sprSnowFlake.png',60,60);
+        this.game.load.spritesheet('sprEnemy','assets/images/sprEnemy.png',33,33);
         this.game.load.image('imgIntro','assets/images/imgIntro.png');
         this.game.load.image('imgTiles','assets/images/imgTiles.png');
         this.game.load.spritesheet('sprTiles','assets/images/imgTiles.png',32,32);

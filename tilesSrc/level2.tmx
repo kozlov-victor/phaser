@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="40" height="11" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="imgTiles" tilewidth="32" tileheight="32">
+  <image source="../assets/images/imgTiles.png" width="96" height="32"/>
+ </tileset>
+ <tileset firstgid="4" name="sprSnowFlake" tilewidth="60" tileheight="60">
+  <image source="../assets/images/sprSnowFlake.png" width="480" height="60"/>
+  <tile id="0">
+   <properties>
+    <property name="type" value="snowFlake"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="mainLayer" width="40" height="11">
+  <data encoding="csv">
+2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,
+0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,2,2,0,0,2,2,0,2,2,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,
+0,0,0,0,0,0,0,0,0,0,2,2,0,0,2,2,2,2,0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,
+2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+</data>
+ </layer>
+ <objectgroup name="objectLayer">
+  <object gid="4" x="332" y="272">
+   <properties>
+    <property name="type" value="snowFlake"/>
+   </properties>
+  </object>
+  <object gid="4" x="214" y="324">
+   <properties>
+    <property name="type" value="snowFlake"/>
+   </properties>
+  </object>
+  <object gid="4" x="844" y="94">
+   <properties>
+    <property name="type" value="snowFlake"/>
+   </properties>
+  </object>
+  <object gid="4" x="806" y="334">
+   <properties>
+    <property name="type" value="snowFlake"/>
+   </properties>
+  </object>
+  <object gid="4" x="874" y="330">
+   <properties>
+    <property name="type" value="snowFlake"/>
+   </properties>
+  </object>
+  <object gid="4" x="1224" y="214">
+   <properties>
+    <property name="type" value="snowFlake"/>
+   </properties>
+  </object>
+  <object gid="2" x="676" y="224">
+   <properties>
+    <property name="deltaPointMax" value="60"/>
+    <property name="deltaPointMin" value="10"/>
+    <property name="platformType" value="2"/>
+    <property name="type" value="platform"/>
+   </properties>
+  </object>
+  <object gid="2" x="570" y="248">
+   <properties>
+    <property name="deltaPointMax" value="60"/>
+    <property name="deltaPointMin" value="10"/>
+    <property name="platformType" value="2"/>
+    <property name="type" value="platform"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

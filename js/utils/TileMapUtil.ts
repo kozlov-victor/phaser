@@ -32,7 +32,7 @@ class TileMapUtil {
         return this.tileMap.objects[this.objectLayerName];
     }
 
-    getMainLayer() {
+    getMainLayer():Phaser.TilemapLayer {
         return this.mainLayer;
     }
 

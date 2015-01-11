@@ -36,6 +36,7 @@ var Preload = (function (_super) {
         this.game.load.setPreloadSprite(preloadSprite);
         this.game.load.spritesheet('sprHero', 'assets/images/sprSanta.png', 32, 32);
         this.game.load.spritesheet('sprSnowFlake', 'assets/images/sprSnowFlake.png', 60, 60);
+        this.game.load.spritesheet('sprEnemy', 'assets/images/sprEnemy.png', 33, 33);
         this.game.load.image('imgIntro', 'assets/images/imgIntro.png');
         this.game.load.image('imgTiles', 'assets/images/imgTiles.png');
         this.game.load.spritesheet('sprTiles', 'assets/images/imgTiles.png', 32, 32);
@@ -167,11 +168,6 @@ var Hero = (function (_super) {
             this.sprite.scale.setTo(1, 1);
         }
     };
-    Hero.prototype.stop = function () {
-        this.sprite.animations.stop();
-        this.sprite.body.velocity.x = 0;
-        this.sprite.frame = this.initialFrame;
-    };
     Hero.prototype.getBullets = function () {
         return this.fireBehaviour.getBullets();
     };
@@ -212,6 +208,71 @@ var Hero = (function (_super) {
         }
     };
     return Hero;
+})(MoveableActor);
+/// <reference path="../base/MoveableActor.ts"/>
+var Enemy = (function (_super) {
+    __extends(Enemy, _super);
+    function Enemy(posX, posY, spriteName, game, groupName) {
+        _super.call(this, posX, posY, spriteName, game, groupName);
+        this.sprite.anchor.setTo(0.5, 1);
+        this.sprite.animations.add('walk', [0, 1, 2], 6, true);
+        this.sprite.body.setSize(24, 32, 0, 0);
+        this.fireBehaviour = new FireBehaviour(this.game, 'imgParticle', 500);
+    }
+    Enemy.prototype.jump = function () {
+        this.sprite.body.velocity.y = -100;
+    };
+    Enemy.prototype.fire = function () {
+        var bullet = this.fireBehaviour.fire();
+        if (bullet) {
+            if (this.direction == 1 /* LEFT */) {
+                bullet.reset(this.sprite.position.x - 20, this.sprite.position.y - 32);
+                bullet.body.velocity.x = -500;
+            }
+            else {
+                bullet.reset(this.sprite.position.x, this.sprite.position.y - 32);
+                bullet.body.velocity.x = 500;
+            }
+            bullet.scale.set(0.1, 0.1);
+        }
+    };
+    Enemy.prototype.getBullets = function () {
+        return this.fireBehaviour.getBullets();
+    };
+    Enemy.prototype.setDirection = function (direction) {
+        this.direction = direction;
+        this.sprite.animations.play('walk');
+        if (1 /* LEFT */ == direction) {
+            this.sprite.body.velocity.x = -this.velocity;
+            this.sprite.scale.setTo(1, 1);
+        }
+        else if (2 /* RIGHT */ == direction) {
+            this.sprite.body.velocity.x = this.velocity;
+            this.sprite.scale.setTo(-1, 1);
+        }
+    };
+    Enemy.prototype.update = function (tileMap, hero) {
+        var _this = this;
+        this.game.physics.arcade.collide(tileMap, this.sprite, function () {
+            if (_this.sprite.body.blocked.left) {
+                _this.setDirection(2 /* RIGHT */);
+                _this.jump();
+            }
+            else if (_this.sprite.body.blocked.right) {
+                _this.setDirection(1 /* LEFT */);
+                _this.jump();
+            }
+            if (_this.sprite.position.x <= _this.sprite.width)
+                _this.setDirection(2 /* RIGHT */);
+        });
+        if (Math.abs(hero.sprite.position.x - this.sprite.position.x) < 100) {
+            this.fire();
+        }
+    };
+    Enemy.prototype.getDirection = function () {
+        return this.direction;
+    };
+    return Enemy;
 })(MoveableActor);
 /// <reference path="../base/Actor.ts"/>
 var SnowFlake = (function (_super) {
@@ -323,6 +384,7 @@ var TileMapUtil = (function () {
 })();
 /// <reference path="../engine/phaser.d.ts"/>
 /// <reference path="../actors/generics/Hero.ts"/>
+/// <reference path="../actors/generics/Enemy.ts"/>
 /// <reference path="LevelOptions.ts"/>
 /// <reference path="../actors/generics/SnowFlake.ts"/>
 /// <reference path="../actors/generics/Platform.ts"/>
@@ -353,6 +415,10 @@ var BaseLevel = (function (_super) {
                     break;
             }
         });
+        for (var i = 0; i < 10; i++) {
+            var enemy = new Enemy(100 + Math.random() * (this.world.width - 100), 122, 'sprEnemy', this.game, 'enemies');
+            enemy.setDirection(1 /* LEFT */);
+        }
         this.emitter = this.game.add.emitter();
         this.emitter.makeParticles(['imgParticle', 'sprSnowFlake'], [0], 200);
         this.emitter.width = 20;
@@ -363,6 +429,13 @@ var BaseLevel = (function (_super) {
         var _this = this;
         Platform.getGroupRawArr('platforms').forEach(function (pl) {
             pl.update();
+        });
+        var __this = this;
+        Enemy.getGroupRawArr('enemies').forEach(function (en) {
+            en.update(__this.tileMapUtil.getMainLayer(), __this.hero);
+            __this.game.physics.arcade.collide(en.getBullets(), _this.tileMapUtil.getMainLayer(), function (bullet) {
+                bullet.kill();
+            });
         });
         this.game.physics.arcade.collide(this.hero.sprite, Platform.getGroup('platforms'));
         this.game.physics.arcade.collide(this.hero.sprite, this.tileMapUtil.getMainLayer());

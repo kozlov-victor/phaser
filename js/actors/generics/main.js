@@ -1,10 +1,3 @@
-var Directions;
-(function (Directions) {
-    Directions[Directions["LEFT"] = 0] = "LEFT";
-    Directions[Directions["RIGHT"] = 1] = "RIGHT";
-    Directions[Directions["DOWN"] = 2] = "DOWN";
-    Directions[Directions["UP"] = 3] = "UP";
-})(Directions || (Directions = {}));
 /// <reference path="../../engine/phaser.d.ts"/>
 var Actor = (function () {
     function Actor(posX, posY, spriteName, game, groupName) {
@@ -18,49 +11,38 @@ var Actor = (function () {
             if (!Actor.groups[groupName])
                 Actor.groups[groupName] = game.add.group();
             Actor.groups[groupName].add(this.sprite);
+            if (!Actor.groupsRawArr[groupName])
+                Actor.groupsRawArr[groupName] = [];
+            Actor.groupsRawArr[groupName].push(this);
         }
     }
     Actor.getGroup = function (groupName) {
-        return Actor.groups[groupName];
+        return Actor.groups[groupName] || [];
+    };
+    Actor.getGroupRawArr = function (groupName) {
+        return Actor.groupsRawArr[groupName] || [];
+    };
+    Actor.clear = function () {
+        Actor.groups = {};
+        Actor.groupsRawArr = {};
     };
     Actor.groups = {};
+    Actor.groupsRawArr = {};
     return Actor;
 })();
-///<reference path="Directions.ts"/>
-///<reference path="Actor.ts"/>
+/// <reference path="../base/Actor.ts"/>
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-var MoveableActor = (function (_super) {
-    __extends(MoveableActor, _super);
-    function MoveableActor() {
-        _super.apply(this, arguments);
-        this.velocity = 100;
-        this.initialFrame = 0;
+var Enemy = (function (_super) {
+    __extends(Enemy, _super);
+    function Enemy(posX, posY, spriteName, game, groupName) {
+        _super.call(this, posX, posY, spriteName, game, groupName);
+        this.sprite.anchor.setTo(0.5, 1);
     }
-    MoveableActor.prototype.setDirection = function (direction) {
-    };
-    MoveableActor.prototype.getDirection = function () {
-        return this.direction;
-    };
-    MoveableActor.prototype.stop = function () {
-        this.sprite.animations.stop();
-        this.sprite.body.velocity.x = 0;
-        this.sprite.frame = this.initialFrame;
-    };
-    return MoveableActor;
+    return Enemy;
 })(Actor);
-///<reference path="../base/MoveableActor.ts"/>
-var Platform = (function (_super) {
-    __extends(Platform, _super);
-    function Platform(posX, posY, spriteName, game, groupName) {
-        _super.call(this, posX, posY, spriteName, game);
-        this.initialFrame = 0;
-        this.game.add.tween(this.sprite.position).to({ x: posX + 100 }, 5000, Phaser.Easing.Linear).to({ x: posX - 100 }, 5000, Phaser.Easing.Linear).start();
-    }
-    return Platform;
-})(MoveableActor);
 //# sourceMappingURL=main.js.map
