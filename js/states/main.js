@@ -54,6 +54,13 @@ var Preload = (function (_super) {
     return Preload;
 })(Phaser.State);
 /// <reference path="../../engine/phaser.d.ts"/>
+var GroupsHolder = (function () {
+    function GroupsHolder() {
+    }
+    GroupsHolder.groups = {};
+    GroupsHolder.groupsRawArr = {};
+    return GroupsHolder;
+})();
 var Actor = (function () {
     function Actor(posX, posY, spriteName, game, groupName) {
         this.game = game;
@@ -63,26 +70,25 @@ var Actor = (function () {
         this.sprite.body.collideWorldBounds = true;
         this.sprite.body.gravity.y = 0;
         if (groupName) {
-            if (!Actor.groups[groupName])
-                Actor.groups[groupName] = game.add.group();
-            Actor.groups[groupName].add(this.sprite);
-            if (!Actor.groupsRawArr[groupName])
-                Actor.groupsRawArr[groupName] = [];
-            Actor.groupsRawArr[groupName].push(this);
+            if (!GroupsHolder.groups[groupName]) {
+                GroupsHolder.groups[groupName] = game.add.group();
+            }
+            GroupsHolder.groups[groupName].add(this.sprite);
+            if (!GroupsHolder.groupsRawArr[groupName])
+                GroupsHolder.groupsRawArr[groupName] = [];
+            GroupsHolder.groupsRawArr[groupName].push(this);
         }
     }
     Actor.getGroup = function (groupName) {
-        return Actor.groups[groupName] || [];
+        return GroupsHolder.groups[groupName] || [];
     };
     Actor.getGroupRawArr = function (groupName) {
-        return Actor.groupsRawArr[groupName] || [];
+        return GroupsHolder.groupsRawArr[groupName] || [];
     };
     Actor.clear = function () {
-        Actor.groups = {};
-        Actor.groupsRawArr = {};
+        GroupsHolder.groups = {};
+        GroupsHolder.groupsRawArr = {};
     };
-    Actor.groups = {};
-    Actor.groupsRawArr = {};
     return Actor;
 })();
 ///<reference path="Actor.ts"/>
@@ -113,29 +119,35 @@ var Directions;
     Directions[Directions["UP"] = 4] = "UP";
 })(Directions || (Directions = {}));
 ///<reference path="../engine/phaser.d.ts"/>
+///<reference path="../actors/base/Actor.ts"/>
+var Bullet = (function (_super) {
+    __extends(Bullet, _super);
+    function Bullet(posX, posY, spriteName, game, groupName) {
+        _super.call(this, posX, posY, spriteName, game, groupName);
+    }
+    return Bullet;
+})(Actor);
 var FireBehaviour = (function () {
-    function FireBehaviour(game, particleresource, timeToFire) {
+    function FireBehaviour(game, particleresource, timeToFire, groupName) {
         this.lastFiredTime = 0;
         this.timeToFire = 500;
         this.game = game;
-        this.bulletGroup = this.game.add.group();
-        this.bulletGroup.enableBody = true;
-        this.bulletGroup.physicsBodyType = Phaser.Physics.ARCADE;
-        this.bulletGroup.createMultiple(100, particleresource);
-        this.bulletGroup.setAll('outOfBoundsKill', true);
-        this.bulletGroup.setAll('checkWorldBounds', true);
+        this.groupName = groupName;
+        for (var i = 0; i < 10; i++) {
+            var bullet = new Bullet(0, 0, particleresource, game, groupName);
+            bullet.sprite.outOfBoundsKill = true;
+            bullet.sprite.checkWorldBounds = true;
+            bullet.sprite.renderable = false;
+        }
         this.timeToFire = timeToFire;
     }
     FireBehaviour.prototype.fire = function () {
         var now = this.game.time.now;
         if (now - this.lastFiredTime > this.timeToFire) {
             this.lastFiredTime = now;
-            return this.bulletGroup.getFirstExists(false);
+            return Bullet.getGroup(this.groupName).getFirstExists(false);
         }
         return null;
-    };
-    FireBehaviour.prototype.getBullets = function () {
-        return this.bulletGroup;
     };
     return FireBehaviour;
 })();
@@ -146,9 +158,9 @@ var FireBehaviour = (function () {
 // http://www.rpgmakervxace.net/user/3173-redxwhirlwind/?tab=reputation&app_tab=forums&type=given
 var Hero = (function (_super) {
     __extends(Hero, _super);
-    function Hero(posX, posY, spriteName, game) {
-        _super.call(this, posX, posY, spriteName, game);
-        this.fireBehaviour = new FireBehaviour(this.game, 'imgParticle', 500);
+    function Hero(posX, posY, spriteName, game, groupName) {
+        _super.call(this, posX, posY, spriteName, game, groupName);
+        this.fireBehaviour = new FireBehaviour(this.game, 'imgParticle', 500, 'heroBullets');
         this.initialFrame = 2;
         this.sprite.body.setSize(24, 32, 0, 0);
         game.camera.follow(this.sprite);
@@ -167,9 +179,6 @@ var Hero = (function (_super) {
             this.sprite.body.velocity.x = this.velocity;
             this.sprite.scale.setTo(1, 1);
         }
-    };
-    Hero.prototype.getBullets = function () {
-        return this.fireBehaviour.getBullets();
     };
     Hero.prototype.fire = function () {
         var bullet = this.fireBehaviour.fire();
@@ -207,6 +216,16 @@ var Hero = (function (_super) {
             this.fire();
         }
     };
+    Hero.prototype.hurt = function (val) {
+        Hero.health -= val;
+    };
+    Hero.prototype.getHealth = function () {
+        return Hero.health;
+    };
+    Hero.prototype.updateHealth = function (text) {
+        text.text = Hero.health.toString();
+    };
+    Hero.health = 100;
     return Hero;
 })(MoveableActor);
 /// <reference path="../base/MoveableActor.ts"/>
@@ -217,7 +236,7 @@ var Enemy = (function (_super) {
         this.sprite.anchor.setTo(0.5, 1);
         this.sprite.animations.add('walk', [0, 1, 2], 6, true);
         this.sprite.body.setSize(24, 32, 0, 0);
-        this.fireBehaviour = new FireBehaviour(this.game, 'imgParticle', 500);
+        this.fireBehaviour = new FireBehaviour(this.game, 'imgParticle', 500, 'enemyBullets');
     }
     Enemy.prototype.jump = function () {
         this.sprite.body.velocity.y = -100;
@@ -236,9 +255,6 @@ var Enemy = (function (_super) {
             bullet.scale.set(0.1, 0.1);
         }
     };
-    Enemy.prototype.getBullets = function () {
-        return this.fireBehaviour.getBullets();
-    };
     Enemy.prototype.setDirection = function (direction) {
         this.direction = direction;
         this.sprite.animations.play('walk');
@@ -253,6 +269,8 @@ var Enemy = (function (_super) {
     };
     Enemy.prototype.update = function (tileMap, hero) {
         var _this = this;
+        if (this.sprite['killed'])
+            return;
         this.game.physics.arcade.collide(tileMap, this.sprite, function () {
             if (_this.sprite.body.blocked.left) {
                 _this.setDirection(2 /* RIGHT */);
@@ -415,8 +433,8 @@ var BaseLevel = (function (_super) {
                     break;
             }
         });
-        for (var i = 0; i < 10; i++) {
-            var enemy = new Enemy(100 + Math.random() * (this.world.width - 100), 122, 'sprEnemy', this.game, 'enemies');
+        for (var i = 0; i < 5; i++) {
+            var enemy = new Enemy(Math.random() * 100, 122, 'sprEnemy', this.game, 'enemies');
             enemy.setDirection(1 /* LEFT */);
         }
         this.emitter = this.game.add.emitter();
@@ -424,6 +442,8 @@ var BaseLevel = (function (_super) {
         this.emitter.width = 20;
         this.emitter.height = 20;
         this.emitter.setAlpha(0.1, 1.0);
+        this.healthLabel = this.game.add.text(10, 10, '', { font: 'Arial 2px', fill: '#fff' });
+        this.healthLabel.fixedToCamera = true;
     };
     BaseLevel.prototype.update = function () {
         var _this = this;
@@ -433,14 +453,26 @@ var BaseLevel = (function (_super) {
         var __this = this;
         Enemy.getGroupRawArr('enemies').forEach(function (en) {
             en.update(__this.tileMapUtil.getMainLayer(), __this.hero);
-            __this.game.physics.arcade.collide(en.getBullets(), _this.tileMapUtil.getMainLayer(), function (bullet) {
+            __this.game.physics.arcade.collide(Bullet.getGroup('enemyBullets'), _this.tileMapUtil.getMainLayer(), function (bullet) {
                 bullet.kill();
             });
         });
         this.game.physics.arcade.collide(this.hero.sprite, Platform.getGroup('platforms'));
         this.game.physics.arcade.collide(this.hero.sprite, this.tileMapUtil.getMainLayer());
-        this.game.physics.arcade.collide(this.hero.getBullets(), this.tileMapUtil.getMainLayer(), function (bullet) {
+        this.game.physics.arcade.collide(Bullet.getGroup('heroBullets'), this.tileMapUtil.getMainLayer(), function (bullet) {
             bullet.kill();
+        });
+        this.game.physics.arcade.collide(this.hero.sprite, Enemy.getGroup('enemies'));
+        this.game.physics.arcade.collide(Enemy.getGroup('enemies'), Enemy.getGroup('enemies'));
+        this.game.physics.arcade.collide(Bullet.getGroup('heroBullets'), Enemy.getGroup('enemies'), function (bullet, enemy) {
+            bullet.kill();
+            enemy.kill();
+            enemy['killed'] = true;
+        });
+        this.game.physics.arcade.collide(this.hero.sprite, Bullet.getGroup('enemyBullets'), function (heroSpr, bulletSpr) {
+            _this.hero.hurt(10);
+            bulletSpr.kill();
+            console.log('hurted');
         });
         this.game.physics.arcade.collide(this.hero.sprite, SnowFlake.getGroup('snowFlakes'), function (hero, showFlake) {
             showFlake.kill();
@@ -454,6 +486,7 @@ var BaseLevel = (function (_super) {
             }
         });
         this.hero.updateCursor(this.cursor);
+        this.hero.updateHealth(this.healthLabel);
     };
     return BaseLevel;
 })(Phaser.State);
@@ -598,7 +631,7 @@ var LevelPassedIntro = (function (_super) {
             sprIntro.alpha = 0;
             this.game.add.tween(sprIntro).to({ alpha: 1 }, 10000, Phaser.Easing.Linear.None).delay(15000).start();
             this.textWin = this.game.add.bitmapText(20, 80, 'font', 'Игра пройдена!!!', 30);
-            this.textTitles = this.game.add.bitmapText(10, 500, 'font', 'Программирование: victor-kozlov\n' + 'Основна идея\n' + 'и  прочие дела\n' + 'так же\n' + 'victor-kozlov\n' + '"Сдесь может быть ваша реклама"\n' + 'Всем привет)))))!\n', 15);
+            this.textTitles = this.game.add.bitmapText(10, 500, 'font', 'Программирование: victor-kozlov\n' + 'Основна идея\n' + 'и  пр. дела\n' + 'так же\n' + 'victor-kozlov\n' + '"Сдесь может быть ваша реклама"\n' + 'Всем привет)))))!\n', 15);
             this.game.add.tween(this.textTitles.position).to({ y: -200 }, 20000, Phaser.Easing.Linear.None).start();
             this.game.time.events.add(3000, function () {
                 _this.textWin.alpha = 0;

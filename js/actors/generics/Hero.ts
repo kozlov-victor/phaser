@@ -9,9 +9,9 @@ class Hero extends MoveableActor {
 
     private fireBehaviour:FireBehaviour;
 
-    constructor(posX:number,posY:number,spriteName:string,game:Phaser.Game) {
-        super(posX,posY,spriteName,game);
-        this.fireBehaviour = new FireBehaviour(this.game,'imgParticle',500);
+    constructor(posX:number,posY:number,spriteName:string,game:Phaser.Game,groupName?:string) {
+        super(posX,posY,spriteName,game,groupName);
+        this.fireBehaviour = new FireBehaviour(this.game,'imgParticle',500,'heroBullets');
         this.initialFrame = 2;
         this.sprite.body.setSize(24,32,0,0);
         game.camera.follow(this.sprite);
@@ -33,11 +33,6 @@ class Hero extends MoveableActor {
         }
     }
 
-
-
-    getBullets():Phaser.Group {
-        return this.fireBehaviour.getBullets();
-    }
 
     fire():void {
         var bullet:Phaser.Sprite = this.fireBehaviour.fire();
@@ -77,5 +72,20 @@ class Hero extends MoveableActor {
             this.fire();
         }
     }
+
+    private static health:number =100;
+
+    public hurt(val:number):void {
+        Hero.health-=val;
+    }
+
+    public getHealth():number {
+        return Hero.health;
+    }
+
+    public updateHealth(text:Phaser.Text) {
+        text.text = Hero.health.toString();
+    }
+
 
 }

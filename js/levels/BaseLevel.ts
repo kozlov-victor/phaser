@@ -12,6 +12,7 @@ class BaseLevel extends Phaser.State {
     cursor:Phaser.CursorKeys;
     tileMapUtil:TileMapUtil;
     emitter:Phaser.Particles.Arcade.Emitter;
+    healthLabel:Phaser.Text;
 
     collected:number = 0;
 
@@ -43,8 +44,8 @@ class BaseLevel extends Phaser.State {
 
             }
         });
-        for (var i=0;i<10;i++){
-            var enemy = new Enemy(100+Math.random()*(this.world.width-100),122,'sprEnemy',this.game,'enemies');
+        for (var i=0;i<5;i++){
+            var enemy = new Enemy(Math.random()*100,122,'sprEnemy',this.game,'enemies');
             enemy.setDirection(Directions.LEFT);
         }
         this.emitter = this.game.add.emitter();
@@ -52,6 +53,10 @@ class BaseLevel extends Phaser.State {
         this.emitter.width = 20;
         this.emitter.height = 20;
         this.emitter.setAlpha(0.1,1.0);
+
+        this.healthLabel = this.game.add.text(10,10,'',{font:'Arial 2px',fill:'#fff'});
+        this.healthLabel.fixedToCamera = true;
+
     }
 
     public update():void {
@@ -61,7 +66,7 @@ class BaseLevel extends Phaser.State {
         var __this:BaseLevel = this;
         Enemy.getGroupRawArr('enemies').forEach((en:Enemy)=>{
             en.update(__this.tileMapUtil.getMainLayer(),__this.hero);
-            __this.game.physics.arcade.collide(en.getBullets(),this.tileMapUtil.getMainLayer(),
+            __this.game.physics.arcade.collide(Bullet.getGroup('enemyBullets'),this.tileMapUtil.getMainLayer(),
                 (bullet:Phaser.Sprite)=>{
                     bullet.kill();
                 }
@@ -69,9 +74,25 @@ class BaseLevel extends Phaser.State {
         });
         this.game.physics.arcade.collide(this.hero.sprite,Platform.getGroup('platforms'));
         this.game.physics.arcade.collide(this.hero.sprite,this.tileMapUtil.getMainLayer());
-        this.game.physics.arcade.collide(this.hero.getBullets(),this.tileMapUtil.getMainLayer(),
+        this.game.physics.arcade.collide(Bullet.getGroup('heroBullets'),this.tileMapUtil.getMainLayer(),
             (bullet:Phaser.Sprite)=>{
                 bullet.kill();
+            }
+        );
+        this.game.physics.arcade.collide(this.hero.sprite,Enemy.getGroup('enemies'));
+        this.game.physics.arcade.collide(Enemy.getGroup('enemies'),Enemy.getGroup('enemies'));
+        this.game.physics.arcade.collide(Bullet.getGroup('heroBullets'),Enemy.getGroup('enemies'),
+            (bullet:Phaser.Sprite,enemy:Phaser.Sprite)=>{
+                bullet.kill();
+                enemy.kill();
+                enemy['killed'] = true;
+            }
+        );
+        this.game.physics.arcade.collide(this.hero.sprite,Bullet.getGroup('enemyBullets'),
+            (heroSpr:Phaser.Sprite,bulletSpr:Phaser.Sprite)=>{
+                this.hero.hurt(10);
+                bulletSpr.kill();
+                console.log('hurted');
             }
         );
         this.game.physics.arcade.collide(this.hero.sprite,SnowFlake.getGroup('snowFlakes'),
@@ -88,6 +109,7 @@ class BaseLevel extends Phaser.State {
             }
         );
         this.hero.updateCursor(this.cursor);
+        this.hero.updateHealth(this.healthLabel);
     }
 
 }

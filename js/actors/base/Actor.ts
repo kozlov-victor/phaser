@@ -1,10 +1,12 @@
 /// <reference path="../../engine/phaser.d.ts"/>
 
+class GroupsHolder {
+    static groups={};
+    static groupsRawArr={};
+}
 
 class Actor {
     sprite:Phaser.Sprite;
-    private static groups={};
-    private static groupsRawArr={};
     game:Phaser.Game;
 
     constructor(posX:number,posY:number,spriteName:string,game:Phaser.Game,groupName?:string) {
@@ -15,24 +17,26 @@ class Actor {
         this.sprite.body.collideWorldBounds = true;
         this.sprite.body.gravity.y = 0;
         if (groupName) {
-            if (!Actor.groups[groupName]) Actor.groups[groupName] = game.add.group();
-            (<Phaser.Group>Actor.groups[groupName]).add(this.sprite);
-            if (!Actor.groupsRawArr[groupName]) Actor.groupsRawArr[groupName] = [];
-            Actor.groupsRawArr[groupName].push(this);
+            if (!GroupsHolder.groups[groupName]) {
+                GroupsHolder.groups[groupName] = game.add.group();
+            }
+            GroupsHolder.groups[groupName].add(this.sprite);
+            if (!GroupsHolder.groupsRawArr[groupName]) GroupsHolder.groupsRawArr[groupName] = [];
+            GroupsHolder.groupsRawArr[groupName].push(this);
         }
     }
 
     static getGroup(groupName:string):Phaser.Group {
-        return Actor.groups[groupName] || [];
+        return GroupsHolder.groups[groupName] || [];
     }
 
     static getGroupRawArr(groupName:string):Actor[] {
-        return Actor.groupsRawArr[groupName] || [];
+        return GroupsHolder.groupsRawArr[groupName] || [];
     }
 
     static clear():void {
-        Actor.groups = {};
-        Actor.groupsRawArr = {};
+        GroupsHolder.groups = {};
+        GroupsHolder.groupsRawArr = {};
     }
 
 

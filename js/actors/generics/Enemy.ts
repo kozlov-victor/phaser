@@ -10,7 +10,7 @@ class Enemy extends MoveableActor {
         this.sprite.anchor.setTo(0.5,1);
         this.sprite.animations.add('walk',[0,1,2],6,true);
         this.sprite.body.setSize(24,32,0,0);
-        this.fireBehaviour = new FireBehaviour(this.game,'imgParticle',500);
+        this.fireBehaviour = new FireBehaviour(this.game,'imgParticle',500,'enemyBullets');
     }
 
     jump() {
@@ -32,9 +32,6 @@ class Enemy extends MoveableActor {
 
     }
 
-    getBullets():Phaser.Group {
-        return this.fireBehaviour.getBullets();
-    }
 
     setDirection(direction:Directions):void {
         this.direction = direction;
@@ -50,6 +47,7 @@ class Enemy extends MoveableActor {
     }
 
     update(tileMap:Phaser.TilemapLayer,hero:Hero) {
+        if (this.sprite['killed']) return;
         this.game.physics.arcade.collide(tileMap,this.sprite,()=>{
             if (this.sprite.body.blocked.left) {
                 this.setDirection(Directions.RIGHT);
