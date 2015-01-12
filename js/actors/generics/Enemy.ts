@@ -47,7 +47,6 @@ class Enemy extends MoveableActor {
     }
 
     update(tileMap:Phaser.TilemapLayer,hero:Hero) {
-        if (this.sprite['killed']) return;
         this.game.physics.arcade.collide(tileMap,this.sprite,()=>{
             if (this.sprite.body.blocked.left) {
                 this.setDirection(Directions.RIGHT);

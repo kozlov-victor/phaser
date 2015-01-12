@@ -269,8 +269,6 @@ var Enemy = (function (_super) {
     };
     Enemy.prototype.update = function (tileMap, hero) {
         var _this = this;
-        if (this.sprite['killed'])
-            return;
         this.game.physics.arcade.collide(tileMap, this.sprite, function () {
             if (_this.sprite.body.blocked.left) {
                 _this.setDirection(2 /* RIGHT */);
@@ -434,7 +432,7 @@ var BaseLevel = (function (_super) {
             }
         });
         for (var i = 0; i < 5; i++) {
-            var enemy = new Enemy(Math.random() * 100, 122, 'sprEnemy', this.game, 'enemies');
+            var enemy = new Enemy(Math.random() * 500 + i * 100, 122, 'sprEnemy', this.game, 'enemies');
             enemy.setDirection(1 /* LEFT */);
         }
         this.emitter = this.game.add.emitter();
@@ -452,6 +450,8 @@ var BaseLevel = (function (_super) {
         });
         var __this = this;
         Enemy.getGroupRawArr('enemies').forEach(function (en) {
+            if (en.sprite['killed'])
+                return;
             en.update(__this.tileMapUtil.getMainLayer(), __this.hero);
             __this.game.physics.arcade.collide(Bullet.getGroup('enemyBullets'), _this.tileMapUtil.getMainLayer(), function (bullet) {
                 bullet.kill();
@@ -472,7 +472,6 @@ var BaseLevel = (function (_super) {
         this.game.physics.arcade.collide(this.hero.sprite, Bullet.getGroup('enemyBullets'), function (heroSpr, bulletSpr) {
             _this.hero.hurt(10);
             bulletSpr.kill();
-            console.log('hurted');
         });
         this.game.physics.arcade.collide(this.hero.sprite, SnowFlake.getGroup('snowFlakes'), function (hero, showFlake) {
             showFlake.kill();

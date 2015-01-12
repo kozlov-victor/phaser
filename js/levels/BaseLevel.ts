@@ -45,7 +45,7 @@ class BaseLevel extends Phaser.State {
             }
         });
         for (var i=0;i<5;i++){
-            var enemy = new Enemy(Math.random()*100,122,'sprEnemy',this.game,'enemies');
+            var enemy = new Enemy(Math.random()*500+i*100,122,'sprEnemy',this.game,'enemies');
             enemy.setDirection(Directions.LEFT);
         }
         this.emitter = this.game.add.emitter();
@@ -65,6 +65,7 @@ class BaseLevel extends Phaser.State {
         });
         var __this:BaseLevel = this;
         Enemy.getGroupRawArr('enemies').forEach((en:Enemy)=>{
+            if (en.sprite['killed']) return;
             en.update(__this.tileMapUtil.getMainLayer(),__this.hero);
             __this.game.physics.arcade.collide(Bullet.getGroup('enemyBullets'),this.tileMapUtil.getMainLayer(),
                 (bullet:Phaser.Sprite)=>{
@@ -92,7 +93,6 @@ class BaseLevel extends Phaser.State {
             (heroSpr:Phaser.Sprite,bulletSpr:Phaser.Sprite)=>{
                 this.hero.hurt(10);
                 bulletSpr.kill();
-                console.log('hurted');
             }
         );
         this.game.physics.arcade.collide(this.hero.sprite,SnowFlake.getGroup('snowFlakes'),
